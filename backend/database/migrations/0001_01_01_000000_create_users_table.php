@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            // Role logic: 1=Admin, 2=Teacher, 3=Student 
+            $table->enum('role', ['admin', 'teacher', 'student'])->default('student'); 
+            $table->string('group_id')->nullable(); // For students/teachers [cite: 10]
+            $table->boolean('is_validated')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });
