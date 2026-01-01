@@ -26,4 +26,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Schedule Upload
     Route::post('/admin/upload-schedule', [AdminController::class, 'uploadSchedule']);
+
+    // Course Assignment
+    Route::get('/admin/course-assignments', [AdminController::class, 'getCourseAssignments']);
+    Route::post('/admin/toggle-course-assignment', [AdminController::class, 'toggleCourseAssignment']);
 });

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/assign_groups_page.dart';
 import 'package:frontend/screens/login_page.dart';
 import 'package:frontend/screens/upload_schedule_page.dart';
+import 'package:frontend/screens/manage_courses.dart';
 import 'manage_students_page.dart';
 import 'pending_registrations.dart'; // We will create this next
 
@@ -71,7 +72,12 @@ class AdminHome extends StatelessWidget {
                     Icons.calendar_month, 
                     const UploadSchedulePage(),
                   ),
-                  _buildMenuCard(context, "Manage Courses", Icons.book, null),
+                  _buildMenuCard(
+                    context, 
+                    "Manage Courses", 
+                    Icons.book, 
+                    const ManageCoursesPage(),
+                  ),
                 ],
               ),
             ),

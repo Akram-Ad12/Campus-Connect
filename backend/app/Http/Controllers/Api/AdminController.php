@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Group;
+use App\Models\CourseTeacher;
+use App\Models\CourseGroup;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller {
@@ -115,5 +118,45 @@ public function uploadSchedule(Request $request) {
     }
 
     return response()->json(['message' => 'Upload failed'], 400);
+}
+
+
+public function getCourseAssignments() {
+    return response()->json([
+        'teachers' => CourseTeacher::all(),
+        'groups' => CourseGroup::all(),
+    ]);
+}
+
+public function toggleCourseAssignment(Request $request) {
+    $course = $request->course_name;
+    $id = $request->id;
+    $type = $request->type; // 'teacher' or 'group'
+    $action = $request->action;
+
+    if ($type == 'teacher') {
+        if ($action == 'add') {
+            $user = User::findOrFail($id);
+            CourseTeacher::firstOrCreate([
+                'course_name' => $course,
+                'teacher_id' => $id,
+                'teacher_name' => $user->name // Now it won't be NULL
+            ]);
+        } else {
+            CourseTeacher::where('course_name', $course)->where('teacher_id', $id)->delete();
+        }
+    } else {
+        if ($action == 'add') {
+            $group = Group::findOrFail($id);
+            CourseGroup::firstOrCreate([
+                'course_name' => $course,
+                'group_id' => $id,
+                'group_name' => $group->name // Now it won't be NULL
+            ]);
+        } else {
+            CourseGroup::where('course_name', $course)->where('group_id', $id)->delete();
+        }
+    }
+    return response()->json(['message' => 'Success']);
 }
 }
