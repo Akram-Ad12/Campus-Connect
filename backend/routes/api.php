@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\TeacherController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -30,4 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Course Assignment
     Route::get('/admin/course-assignments', [AdminController::class, 'getCourseAssignments']);
     Route::post('/admin/toggle-course-assignment', [AdminController::class, 'toggleCourseAssignment']);
+
+    // Teacher Dashboard
+    Route::get('/teacher/dashboard', [TeacherController::class, 'getTeacherData']);
 });

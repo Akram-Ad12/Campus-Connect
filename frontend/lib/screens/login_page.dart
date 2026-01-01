@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:frontend/screens/student_home.dart';
+import 'package:frontend/screens/teacher_home.dart';
 import 'package:frontend/screens/admin_home.dart';
 
 class LoginPage extends StatefulWidget {
@@ -62,11 +63,7 @@ class _LoginPageState extends State<LoginPage> {
       } else if (role == 'student') {
         nextScreen = StudentHome(userData: data['user']);
       } else if (role == 'teacher') {
-         // Placeholder until TeacherHome is created [cite: 11]
-         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Teacher Dashboard coming soon!")),
-        );
-        return;
+         nextScreen = TeacherHome();
       } else {
         nextScreen = const AdminHome();
       }
