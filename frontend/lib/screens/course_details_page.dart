@@ -1,4 +1,4 @@
-// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -34,6 +34,32 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       setState(() => files = jsonDecode(response.body));
     }
   }
+
+  Future<void> deleteFile(int fileId) async {
+  final url = Uri.parse('http://127.0.0.1:8000/api/teacher/delete-file/$fileId');
+
+  try {
+    final response = await http.delete(
+      url,
+      headers: {
+        'Authorization': 'Bearer ${globals.userToken}',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Refresh the UI list
+      fetchFiles(); 
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("File deleted successfully")),
+      );
+    } else {
+      print("Delete failed: ${response.body}");
+    }
+  } catch (e) {
+    print("Error during delete: $e");
+  }
+}
 
   Future<void> pickAndUpload() async {
   try {
@@ -121,43 +147,61 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
 
   Widget _buildFileContainer(dynamic file) {
   String baseUrl = "http://127.0.0.1:8000/storage/";
-  String fullPath = baseUrl + file['file_path'];
-
+  
   if (file['file_type'] == 'image') {
-    return Container(
-      margin: const EdgeInsets.all(15),
-      height: 200,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: Image.network(
-          fullPath,
-          fit: BoxFit.cover,
-          // This helps with some browser CORS caching issues
-          errorBuilder: (context, error, stackTrace) {
-            return const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey));
-          },
+    return Stack(
+      children: [
+        Container(
+          margin: const EdgeInsets.all(15),
+          height: 200,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            image: DecorationImage(
+              image: NetworkImage(baseUrl + file['file_path']), 
+              fit: BoxFit.cover
+            ),
+          ),
         ),
+        // Delete button for Teacher only
+        if (widget.isTeacher)
+          Positioned(
+            top: 20,
+            right: 20,
+            child: CircleAvatar(
+              backgroundColor: Colors.red.withOpacity(0.8),
+              child: IconButton(
+                icon: const Icon(Icons.delete, color: Colors.white),
+                onPressed: () => deleteFile(file['id']),
+              ),
+            ),
+          ),
+      ],
+    );
+  } else {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(10), 
+        border: Border.all(color: Colors.grey.shade200)
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.picture_as_pdf, color: Colors.red),
+          const SizedBox(width: 10),
+          Expanded(child: Text(file['file_name'], overflow: TextOverflow.ellipsis)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.download, color: Colors.blue)),
+          // Delete button for Teacher only
+          if (widget.isTeacher)
+            IconButton(
+              onPressed: () => deleteFile(file['id']), 
+              icon: const Icon(Icons.delete_outline, color: Colors.red)
+            ),
+        ],
       ),
     );
-  }else {
-      return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.shade200)),
-        child: Row(
-          children: [
-            const Icon(Icons.picture_as_pdf, color: Colors.red),
-            const SizedBox(width: 10),
-            Expanded(child: Text(file['file_name'], overflow: TextOverflow.ellipsis, maxLines: 1)),
-            IconButton(onPressed: () {}, icon: const Icon(Icons.download, color: Colors.blue)),
-          ],
-        ),
-      );
-    }
   }
+}
 }

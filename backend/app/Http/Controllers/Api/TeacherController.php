@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\CourseTeacher;
 use App\Models\CourseGroup;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TeacherController extends Controller
 {
@@ -125,4 +126,30 @@ public function getCourseFiles($course_name) {
     $files = DB::table('course_files')->where('course_name', $course_name)->get();
     return response()->json($files);
 }
+
+public function deleteFile($id)
+    {
+        try {
+            // Find the file record
+            $file = DB::table('course_files')->where('id', $id)->first();
+
+            if (!$file) {
+                return response()->json(['message' => 'File not found'], 404);
+            }
+
+            // 1. Delete physical file from storage/app/public/
+            if (Storage::disk('public')->exists($file->file_path)) {
+                Storage::disk('public')->delete($file->file_path);
+            }
+
+            // 2. Delete the database record
+            DB::table('course_files')->where('id', $id)->delete();
+
+            return response()->json(['message' => 'Deleted successfully'], 200);
+            
+        } catch (\Exception $e) {
+            // This returns the actual error message to your Flutter console
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }
