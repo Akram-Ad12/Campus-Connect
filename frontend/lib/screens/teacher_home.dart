@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use, unused_import, library_private_types_in_public_api
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/login_page.dart';
+import 'package:frontend/screens/mark_students_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../globals.dart' as globals;
@@ -91,7 +92,7 @@ Future<void> _handleLogout(BuildContext context) async {
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         children: [
                           _buildQuickAction(Icons.how_to_reg, "Attendance", Colors.orange, () {}),
-                          _buildQuickAction(Icons.grade, "Mark Students", Colors.blue, () {}),
+                          _buildQuickAction(Icons.grade, "Mark Students", Colors.blue, () => Navigator.push(context, MaterialPageRoute(builder: (context) => MarkStudentsPage(courses: assignedCourses, groups: assignedGroups)))),
                           _buildQuickAction(Icons.upload_file, "Upload Files", Colors.green, () {}),
                           _buildQuickAction(Icons.message, "Messages", Colors.purple, () {}),
                           _buildQuickAction(Icons.logout, "Logout", Colors.red, () => _handleLogout(context)),

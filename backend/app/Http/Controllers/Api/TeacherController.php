@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class TeacherController extends Controller
 {
-    public function getTeacherData(Request $request)
+public function getTeacherData(Request $request)
 {
     try {
         $user = $request->user();
@@ -31,6 +31,68 @@ class TeacherController extends Controller
             'groups' => $groupsArray, // Returning the simple list of names
         ]);
     } catch (\Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 500);
+    }
+}
+
+public function getGroupStudents(Request $request) {
+    // Use query() to fetch from URL parameters: ?course_name=...&group_name=...
+    $course = $request->query('course_name');
+    $groupName = $request->query('group_name');
+
+    // Get students where their group_id string contains the selected group name
+    $students = \App\Models\User::where('role', 'student')
+                ->where('group_id', 'LIKE', "%{$groupName}%")
+                ->orderBy('name', 'asc')
+                ->get();
+
+    // Map the grades manually to ensure we return 0 if no grade exists yet
+    $data = $students->map(function($student) use ($course) {
+        $grade = \DB::table('grades')
+                   ->where('student_id', $student->id)
+                   ->where('course_name', $course)
+                   ->first();
+
+        return [
+            'id' => $student->id,
+            'name' => $student->name,
+            'cc' => $grade->cc ?? 0,
+            'control' => $grade->control ?? 0,
+        ];
+    });
+
+    return response()->json($data);
+}
+
+// Live-update grade
+public function updateGrade(Request $request)
+{
+    try {
+        // 1. Validate the input (0-20 only)
+        $validated = $request->validate([
+            'student_id' => 'required|exists:users,id',
+            'course_name' => 'required|string',
+            'column' => 'required|in:cc,control', // Only allow these two columns
+            'val' => 'required|numeric|min:0|max:20',
+        ]);
+
+        // 2. Perform the update or insert
+        // Use updateOrInsert to handle students who don't have a grade record yet
+        \DB::table('grades')->updateOrInsert(
+            [
+                'student_id' => $request->student_id, 
+                'course_name' => $request->course_name
+            ],
+            [
+                $request->column => $request->val, 
+                'updated_at' => now(),
+                'created_at' => now()
+            ]
+        );
+
+        return response()->json(['status' => 'success']);
+    } catch (\Exception $e) {
+        // This will print the error to your Laravel logs
         return response()->json(['message' => $e->getMessage()], 500);
     }
 }

@@ -34,4 +34,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Teacher Dashboard
     Route::get('/teacher/dashboard', [TeacherController::class, 'getTeacherData']);
+    Route::get('/teacher/get-students', [TeacherController::class, 'getGroupStudents']);
+    Route::post('/teacher/update-grade', [TeacherController::class, 'updateGrade']);
 });
