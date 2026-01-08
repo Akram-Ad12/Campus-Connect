@@ -34,6 +34,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Teacher Dashboard
     Route::get('/teacher/dashboard', [TeacherController::class, 'getTeacherData']);
+    // Grades Management
     Route::get('/teacher/get-students', [TeacherController::class, 'getGroupStudents']);
     Route::post('/teacher/update-grade', [TeacherController::class, 'updateGrade']);
+
+    // File Uploads
+    Route::post('/teacher/upload-file', [TeacherController::class, 'uploadFile']);
+    // Get Course Files
+    Route::get('/course/files/{course_name}', [TeacherController::class, 'getCourseFiles']);
+    // Delete Course File
+    Route::delete('/teacher/delete-file/{id}', [App\Http\Controllers\Api\TeacherController::class, 'deleteFile']);
 });

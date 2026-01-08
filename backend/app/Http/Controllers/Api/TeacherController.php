@@ -96,4 +96,33 @@ public function updateGrade(Request $request)
         return response()->json(['message' => $e->getMessage()], 500);
     }
 }
+
+public function uploadFile(Request $request) {
+    $request->validate([
+        'course_name' => 'required',
+        'file' => 'required|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB limit
+    ]);
+
+    if ($request->hasFile('file')) {
+        $file = $request->file('file');
+        $name = $file->getClientOriginalName();
+        $path = $file->store('course_materials', 'public');
+        $type = $file->getClientOriginalExtension() == 'pdf' ? 'pdf' : 'image';
+
+        $fileRecord = DB::table('course_files')->insertGetId([
+            'course_name' => $request->course_name,
+            'file_path' => $path,
+            'file_name' => $name,
+            'file_type' => $type,
+            'created_at' => now(),
+        ]);
+
+        return response()->json(['id' => $fileRecord, 'path' => $path]);
+    }
+}
+
+public function getCourseFiles($course_name) {
+    $files = DB::table('course_files')->where('course_name', $course_name)->get();
+    return response()->json($files);
+}
 }

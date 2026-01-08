@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use, unused_import, library_private_types_in_public_api
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/course_details_page.dart';
 import 'package:frontend/screens/login_page.dart';
 import 'package:frontend/screens/mark_students_page.dart';
 import 'package:http/http.dart' as http;
@@ -101,11 +102,29 @@ Future<void> _handleLogout(BuildContext context) async {
                     ),
                   ),
 
-                  // 3. Your Assigned Courses Section
+// 3. Your Assigned Courses Section
                   _buildSectionTitle("Your Assigned Courses"),
                   assignedCourses.isEmpty 
                     ? _buildEmptyState("No courses assigned yet")
-                    : Column(children: assignedCourses.map((c) => _buildSimpleTile(c.toString(), Icons.book)).toList()),
+                    : Column(
+                        children: assignedCourses.map((c) {
+                          String courseName = c.toString();
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CourseDetailsPage(
+                                    courseName: courseName,
+                                    isTeacher: true, // We will set this to false for the Student dashboard later
+                                  ),
+                                ),
+                              );
+                            },
+                            child: _buildSimpleTile(courseName, Icons.book),
+                          );
+                        }).toList(),
+                      ),
 
                   const SizedBox(height: 10),
 
