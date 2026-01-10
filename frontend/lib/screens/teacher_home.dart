@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/attendance_page.dart';
 import 'package:frontend/screens/course_details_page.dart';
+import 'package:frontend/screens/group_details_page.dart';
 import 'package:frontend/screens/login_page.dart';
 import 'package:frontend/screens/mark_students_page.dart';
 import 'package:http/http.dart' as http;
@@ -38,14 +39,27 @@ class _TeacherHomeState extends State<TeacherHome> {
     );
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        teacherName = data['name'];
-        assignedCourses = data['courses'];
-        assignedGroups = data['groups'];
-        isLoading = false;
-      });
-    } else {
+  final data = jsonDecode(response.body);
+  
+  // 1. Get the lists from the response
+  List<dynamic> rawCourses = data['courses'] ?? [];
+  List<dynamic> rawGroups = data['groups'] ?? [];
+
+  setState(() {
+    teacherName = data['name'];
+    assignedCourses = rawCourses;
+
+    // 2. TRANSFORM the strings into Maps so group['group_name'] works!
+    assignedGroups = rawGroups.map((g) {
+      return {
+        'group_name': g.toString(), // Turns "L3 Group 1" into the 'group_name' key
+        'course_name': rawCourses.isNotEmpty ? rawCourses[0].toString() : "N/A",
+      };
+    }).toList();
+    
+    isLoading = false;
+  });
+} else {
       // Print the actual error from Laravel
       print("Server Error Detail: ${response.body}"); 
       setState(() {
@@ -128,14 +142,32 @@ Future<void> _handleLogout(BuildContext context) async {
 
                   const SizedBox(height: 10),
 
-                  // 4. Your Assigned Groups Section (Same Style)
-                  _buildSectionTitle("Your Assigned Groups"),
-                  assignedGroups.isEmpty 
-                    ? _buildEmptyState("No groups assigned yet")
-                    : Column(
-                      children: assignedGroups.map((groupName) =>
-                      _buildSimpleTile(groupName.toString(), Icons.groups)).toList(),
-                    ),
+                 // 4. Your Assigned Groups Section
+_buildSectionTitle("Your Assigned Groups"),
+assignedGroups.isEmpty 
+    ? _buildEmptyState("No groups assigned yet")
+    : Column(
+        children: assignedGroups.map((group) {
+          final String gName = group['group_name']?.toString() ?? "Unknown Group";
+          final String cName = group['course_name']?.toString() ?? "No Course";
+          
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GroupDetailsPage(
+                    groupName: gName,
+                    courseName: cName,
+                  ),
+                ),
+              );
+            },
+            // CHANGE THIS LINE BELOW:
+            child: _buildSimpleTile(gName, Icons.group), // Removed ($cName)
+          );
+        }).toList(),
+      ),
                   const SizedBox(height: 30),
                 ],
               ),

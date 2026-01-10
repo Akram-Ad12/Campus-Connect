@@ -47,4 +47,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Attendance Management
     Route::get('/teacher/get-attendance', [TeacherController::class, 'getAttendanceList']);
     Route::post('/teacher/toggle-attendance', [TeacherController::class, 'toggleAttendance']);
+
+    Route::get('/teacher/group-details', [TeacherController::class, 'getGroupDetails']);
 });

@@ -6,6 +6,7 @@ import '../globals.dart' as globals;
 class MarkStudentsPage extends StatefulWidget {
   final List<dynamic> courses;
   final List<dynamic> groups;
+  
 
   const MarkStudentsPage({super.key, required this.courses, required this.groups});
 
@@ -17,6 +18,13 @@ class _MarkStudentsPageState extends State<MarkStudentsPage> {
   String? selectedCourse;
   String? selectedGroup;
   List<dynamic> students = [];
+  List<dynamic> getFilteredGroups() {
+  if (selectedCourse == null) return [];
+  return widget.groups.where((group) {
+    // Ensure we are comparing the course_name inside the map to the selected string
+    return group['course_name'].toString() == selectedCourse;
+  }).toList();
+}
 
   Future<void> fetchStudents() async {
   if (selectedCourse == null || selectedGroup == null) return;
@@ -87,7 +95,13 @@ class _MarkStudentsPageState extends State<MarkStudentsPage> {
                 Expanded(child: DropdownButton<String>(
                   hint: const Text("Group"),
                   value: selectedGroup,
-                  items: widget.groups.map((g) => DropdownMenuItem(value: g.toString(), child: Text(g.toString()))).toList(),
+                  items: widget.groups.where((g) => g['course_name'] == selectedCourse).map((g) {
+  String nameOnly = g['group_name'].toString();
+  return DropdownMenuItem<String>(
+    value: nameOnly,
+    child: Text(nameOnly),
+  );
+}).toList(),
                   onChanged: (v) => setState(() { selectedGroup = v; fetchStudents(); }),
                 )),
               ],

@@ -22,6 +22,13 @@ class _AttendancePageState extends State<AttendancePage> {
   bool isLoading = false;
 
   final List<int> weeks = List.generate(16, (index) => index + 1);
+  List<dynamic> getFilteredGroups() {
+  if (selectedCourse == null) return [];
+  return widget.groups.where((group) {
+    // Ensure we are comparing the course_name inside the map to the selected string
+    return group['course_name'].toString() == selectedCourse;
+  }).toList();
+}
 
   // Fetch the student list for the specific Week/Group/Course combo
   Future<void> fetchAttendanceList() async {
@@ -129,26 +136,31 @@ class _AttendancePageState extends State<AttendancePage> {
                 const SizedBox(height: 10),
 
                 // 2. Group Selection (Disabled if no Course)
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: "Group", 
-                    prefixIcon: const Icon(Icons.group),
-                    enabled: selectedCourse != null,
-                  ),
-                  hint: Text("Select Group", style: TextStyle(color: selectedCourse == null ? Colors.grey : Colors.black)),
-                  value: selectedGroup,
-                  // If course is null, items is null (disables dropdown)
-                  items: selectedCourse == null 
-                      ? null 
-                      : widget.groups.map((g) => DropdownMenuItem(value: g.toString(), child: Text(g.toString()))).toList(),
-                  onChanged: (v) {
-                    setState(() {
-                      selectedGroup = v;
-                      selectedWeek = null; // Reset children
-                      students = [];
-                    });
-                  },
-                ),
+DropdownButtonFormField<String>(
+  decoration: InputDecoration(
+    labelText: "Group", 
+    prefixIcon: const Icon(Icons.group),
+    enabled: selectedCourse != null,
+  ),
+  value: selectedGroup,
+  items: selectedCourse == null 
+      ? null 
+      : getFilteredGroups().map((g) {
+          // CHANGE THIS: Extract only the group_name string for the value
+          String nameOnly = g['group_name'].toString(); 
+          return DropdownMenuItem<String>(
+            value: nameOnly, // This ensures 'selectedGroup' stays a String
+            child: Text(nameOnly),
+          );
+        }).toList(),
+  onChanged: (v) {
+    setState(() {
+      selectedGroup = v; // Still a String, so your API calls remain correct
+      selectedWeek = null;
+      students = [];
+    });
+  },
+),
                 const SizedBox(height: 10),
 
                 // 3. Week Selection (Disabled if no Group)

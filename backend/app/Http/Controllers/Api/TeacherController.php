@@ -194,4 +194,39 @@ public function toggleAttendance(Request $request) {
 
     return response()->json(['status' => 'success']);
 }
+
+public function getGroupDetails(Request $request) {
+    $group = $request->query('group_name');
+    $course = $request->query('course_name');
+
+    // Fetch students in the group
+    $students = \App\Models\User::where('role', 'student')
+                ->where('group_id', 'like', "%$group%")
+                ->orderBy('name', 'asc')
+                ->get();
+
+    $data = $students->map(function($student) use ($course) {
+        // Get Grades
+        $grade = DB::table('grades')
+            ->where('student_id', $student->id)
+            ->where('course_name', $course)
+            ->first();
+
+        // Count Attendance (Weeks 1-16)
+        $attendanceCount = DB::table('attendances')
+            ->where('student_id', $student->id)
+            ->where('course_name', $course)
+            ->where('is_present', true)
+            ->count();
+
+        return [
+            'name' => $student->name,
+            'cc_mark' => $grade->cc_mark ?? '-',
+            'control_mark' => $grade->control_mark ?? '-',
+            'attendance' => $attendanceCount,
+        ];
+    });
+
+    return response()->json($data);
+}
 }
