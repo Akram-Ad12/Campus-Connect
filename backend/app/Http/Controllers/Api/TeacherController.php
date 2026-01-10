@@ -69,32 +69,30 @@ public function getGroupStudents(Request $request) {
 public function updateGrade(Request $request)
 {
     try {
-        // 1. Validate the input (0-20 only)
         $validated = $request->validate([
             'student_id' => 'required|exists:users,id',
             'course_name' => 'required|string',
-            'column' => 'required|in:cc,control', // Only allow these two columns
+            // CHANGE THIS LINE: Add '_mark' to match Flutter and DB
+            'column' => 'required|in:cc,control', 
             'val' => 'required|numeric|min:0|max:20',
         ]);
 
-        // 2. Perform the update or insert
-        // Use updateOrInsert to handle students who don't have a grade record yet
         \DB::table('grades')->updateOrInsert(
             [
                 'student_id' => $request->student_id, 
                 'course_name' => $request->course_name
             ],
             [
+                // This now correctly uses 'cc_mark' or 'control_mark'
                 $request->column => $request->val, 
                 'updated_at' => now(),
-                'created_at' => now()
             ]
         );
 
         return response()->json(['status' => 'success']);
     } catch (\Exception $e) {
-        // This will print the error to your Laravel logs
-        return response()->json(['message' => $e->getMessage()], 500);
+        // This will help you see the exact error in your browser console
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 
