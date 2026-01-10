@@ -68,14 +68,24 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
                     DataColumn(label: Text('Control')),
                     DataColumn(label: Text('Attendance')),
                   ],
-                  rows: studentData.map((student) {
-                    return DataRow(cells: [
-                      DataCell(Text(student['name'])),
-                      DataCell(Text(student['cc_mark'].toString())),
-                      DataCell(Text(student['control_mark'].toString())),
-                      DataCell(Text("${student['attendance']}/16")),
-                    ]);
-                  }).toList(),
+                  // Update the rows section in group_details_page.dart
+rows: studentData.map((student) {
+  return DataRow(cells: [
+    DataCell(Text(student['name'] ?? "Unknown")),
+    
+    // FIX: Change 'cc_mark' to 'cc' to match your DB
+    DataCell(Text(
+      (student['cc'] == null || student['cc'] == "") ? "-" : student['cc'].toString()
+    )),
+    
+    // FIX: Change 'control_mark' to 'control' to match your DB
+    DataCell(Text(
+      (student['control'] == null || student['control'] == "") ? "-" : student['control'].toString()
+    )),
+    
+    DataCell(Text("${student['attendance']}/16")),
+  ]);
+}).toList(),
                 ),
               ),
             ),

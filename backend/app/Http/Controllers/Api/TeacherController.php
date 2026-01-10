@@ -203,27 +203,27 @@ public function getGroupDetails(Request $request) {
                 ->orderBy('name', 'asc')
                 ->get();
 
-    $data = $students->map(function($student) use ($course) {
-        // Get Grades
-        $grade = DB::table('grades')
-            ->where('student_id', $student->id)
-            ->where('course_name', $course)
-            ->first();
+    // Inside getGroupDetails in TeacherController.php
+$data = $students->map(function($student) use ($course) {
+    $grade = DB::table('grades')
+        ->where('student_id', $student->id)
+        ->where('course_name', $course)
+        ->first();
 
-        // Count Attendance (Weeks 1-16)
-        $attendanceCount = DB::table('attendances')
-            ->where('student_id', $student->id)
-            ->where('course_name', $course)
-            ->where('is_present', true)
-            ->count();
+    $attendanceCount = DB::table('attendances')
+        ->where('student_id', $student->id)
+        ->where('course_name', $course)
+        ->where('is_present', true)
+        ->count();
 
-        return [
-            'name' => $student->name,
-            'cc_mark' => $grade->cc_mark ?? '-',
-            'control_mark' => $grade->control_mark ?? '-',
-            'attendance' => $attendanceCount,
-        ];
-    });
+    return [
+        'name' => $student->name,
+        // Match these keys to what the Flutter DataTable expects
+        'cc' => $grade ? $grade->cc : null, 
+        'control' => $grade ? $grade->control : null,
+        'attendance' => $attendanceCount,
+    ];
+});
 
     return response()->json($data);
 }
