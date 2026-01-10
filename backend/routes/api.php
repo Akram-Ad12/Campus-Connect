@@ -44,4 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/course/files/{course_name}', [TeacherController::class, 'getCourseFiles']);
     // Delete Course File
     Route::delete('/teacher/delete-file/{id}', [TeacherController::class, 'deleteFile']);
+    // Attendance Management
+    Route::get('/teacher/get-attendance', [TeacherController::class, 'getAttendanceList']);
+    Route::post('/teacher/toggle-attendance', [TeacherController::class, 'toggleAttendance']);
 });

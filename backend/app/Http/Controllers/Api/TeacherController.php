@@ -152,4 +152,46 @@ public function deleteFile($id)
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+
+public function getAttendanceList(Request $request) {
+    $course = $request->query('course_name');
+    $group = $request->query('group_name');
+    $week = $request->query('week');
+
+    $students = \App\Models\User::where('role', 'student')
+                ->where('group_id', 'like', "%$group%")
+                ->orderBy('name', 'asc')
+                ->get();
+
+    $data = $students->map(function($student) use ($course, $week) {
+        $attendance = DB::table('attendances')
+            ->where('student_id', $student->id)
+            ->where('course_name', $course)
+            ->where('week_number', $week)
+            ->first();
+
+        return [
+            'id' => $student->id,
+            'name' => $student->name,
+            'is_present' => $attendance ? (bool)$attendance->is_present : false,
+        ];
+    });
+
+    return response()->json($data);
+}
+
+public function toggleAttendance(Request $request) {
+    $studentId = $request->student_id;
+    $course = $request->course_name;
+    $week = $request->week;
+    $isPresent = $request->is_present;
+
+    DB::table('attendances')->updateOrInsert(
+        ['student_id' => $studentId, 'course_name' => $course, 'week_number' => $week],
+        ['is_present' => $isPresent, 'updated_at' => now()]
+    );
+
+    return response()->json(['status' => 'success']);
+}
 }
