@@ -96,6 +96,17 @@ class _StudentProfileTabState extends State<StudentProfileTab> {
             ),
           ),
           const SizedBox(height: 30),
+          
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text("  Academic Information", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+          ),
+          const SizedBox(height: 10),
+          
+          // LOCKED FIELD: Group
+          _buildLockedTile(Icons.groups_rounded, "Group", "L3 Group 4"), 
+          
+          const SizedBox(height: 25),
 
           // 2. Editable Information Section
           const Align(
@@ -174,4 +185,23 @@ class _StudentProfileTabState extends State<StudentProfileTab> {
       ),
     );
   }
+  
+  Widget _buildLockedTile(IconData icon, String label, String value) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.grey.withOpacity(0.05), // Subtle grey to show it's disabled
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        child: Icon(icon, color: Colors.grey),
+      ),
+      title: Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+      subtitle: Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black45)),
+      trailing: const Icon(Icons.lock_outline_rounded, size: 18, color: Colors.grey), // Lock icon
+    ),
+  );
+}
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 import '../globals.dart' as globals;
 import 'student_profile_tab.dart';
+import 'student_card_tab.dart';
 
 class StudentHome extends StatefulWidget {
   const StudentHome({super.key});
@@ -17,7 +18,7 @@ class _StudentHomeState extends State<StudentHome> {
   // The pages corresponding to the bottom navigation tabs
   late final List<Widget> _pages = [
     _buildHomeTab(),
-    const Center(child: Text("Student Card Content")), // Placeholder for Tab 2
+    const StudentCardTab(), // Placeholder for Tab 2
     const StudentProfileTab(), // Placeholder for Tab 3
   ];
 
