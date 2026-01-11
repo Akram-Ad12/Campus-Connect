@@ -61,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
       if (role == 'admin') {
         nextScreen = const AdminHome();
       } else if (role == 'student') {
-        nextScreen = StudentHome(userData: data['user']);
+        nextScreen = StudentHome();
       } else if (role == 'teacher') {
          nextScreen = TeacherHome();
       } else {
