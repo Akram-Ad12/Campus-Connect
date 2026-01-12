@@ -55,4 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/student/profile', [StudentController::class, 'getProfile']);
     Route::post('/student/update-profile', [StudentController::class, 'updateProfile']);
     Route::post('/student/upload-avatar', [StudentController::class, 'uploadAvatar']);
+
+    // Student Grades
+    Route::get('/student/grades', [StudentController::class, 'getGrades']);
 });

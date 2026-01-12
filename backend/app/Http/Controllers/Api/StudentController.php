@@ -75,5 +75,19 @@ class StudentController extends Controller
 
     return response()->json(['error' => 'No file uploaded'], 400);
     }
+
+
+    public function getGrades(Request $request) {
+    $user = $request->user();
+
+    // Fetch all grades for this student
+    // We assume you have a 'grades' table as shown in your screenshot
+    $grades = DB::table('grades')
+        ->where('student_id', $user->id)
+        ->select('course_name', 'cc', 'control')
+        ->get();
+
+    return response()->json($grades);
+    }
     
 }

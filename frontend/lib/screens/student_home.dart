@@ -1,6 +1,7 @@
 // ignore_for_file: unused_import, use_build_context_synchronously, deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/login_page.dart';
+import 'package:frontend/screens/student_grades_page.dart';
 import 'package:frontend/screens/student_schedule_page.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 import 'package:http/http.dart' as http; // ADD THIS
@@ -241,6 +242,13 @@ class _StudentHomeState extends State<StudentHome> {
               builder: (context) => StudentSchedulePage(
                 schedulePath: studentProfile?['schedule_image'],
               ),
+            ),
+          );
+        } else if (title == "Grades") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const StudentGradesPage(),
             ),
           );
         }
