@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 class StudentCardTab extends StatefulWidget {
-  const StudentCardTab({super.key});
+  final Map<String, dynamic>? userData;
+  const StudentCardTab({super.key, this.userData});
 
   @override
   State<StudentCardTab> createState() => _StudentCardTabState();
@@ -38,6 +39,13 @@ class _StudentCardTabState extends State<StudentCardTab> {
   }
 
   Widget _buildPhysicalCard() {
+    final name = widget.userData?['name'] ?? "Loading...";
+    final email = widget.userData?['email'] ?? "Email not found";
+    final group = widget.userData?['group_name'] ?? "No Group";
+    final sex = widget.userData?['sex'] ?? "Not specified";
+    final dob = widget.userData?['dob'] ?? "--/--/----";
+    final pob = widget.userData?['pob'] ?? "/";
+    final profilePic = widget.userData?['profile_picture'];
     return Container(
       width: 340,
       height: 500,
@@ -87,32 +95,27 @@ class _StudentCardTabState extends State<StudentCardTab> {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                    child: const CircleAvatar(
+                    child: CircleAvatar(
                       radius: 60,
-                      backgroundImage: AssetImage('user.png'),
+                      backgroundImage: profilePic != null
+                      ? NetworkImage('http://127.0.0.1:8000/storage/$profilePic')
+                      : const AssetImage('user.png') as ImageProvider,
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
-                  // Name
-                  const Text(
-                    "Akram Adoui", // From DB
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const Text(
-                    "akram.adoui@univ-dz.com", // Now displaying Email here
-                    style: TextStyle(color: Colors.white60, fontSize: 13, letterSpacing: 0.5),
-                  ),
+
+                  Text(name, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(email, style: const TextStyle(color: Colors.white60, fontSize: 13)),
                   
                   const Spacer(),
                   
-                  _buildDetailRow("GROUP", "L3 Group 4"),
+                  _buildDetailRow("GROUP", group),
                   const Divider(color: Colors.white24),
-                  _buildDetailRow("SEX", "Male"),
+                  _buildDetailRow("SEX", sex),
                   const Divider(color: Colors.white24),
-                  _buildDetailRow("DOB", "15/05/2002"),
+                  _buildDetailRow("DOB", dob),
                   const Divider(color: Colors.white24),
-                  _buildDetailRow("POB", "Algiers, DZ"),
+                  _buildDetailRow("POB", pob),
                   
                   const SizedBox(height: 30),
                   

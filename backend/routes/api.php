@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\TeacherController;
+use App\Http\Controllers\Api\StudentController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -49,4 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/teacher/toggle-attendance', [TeacherController::class, 'toggleAttendance']);
 
     Route::get('/teacher/group-details', [TeacherController::class, 'getGroupDetails']);
+
+    // Student Profile Management
+    Route::get('/student/profile', [StudentController::class, 'getProfile']);
+    Route::post('/student/update-profile', [StudentController::class, 'updateProfile']);
+    Route::post('/student/upload-avatar', [StudentController::class, 'uploadAvatar']);
 });

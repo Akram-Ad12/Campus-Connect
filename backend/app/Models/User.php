@@ -55,4 +55,9 @@ class User extends Authenticatable
     // Relates the 'group_id' column in 'users' to the 'name' column in 'groups'
     return $this->belongsTo(Group::class, 'group_id', 'name');
 }
+
+public function studentInformation()
+{
+    return $this->hasOne(StudentInformation::class);
+}
 }
