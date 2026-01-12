@@ -1,6 +1,7 @@
 // ignore_for_file: unused_import, use_build_context_synchronously, deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/login_page.dart';
+import 'package:frontend/screens/student_attendance_page.dart';
 import 'package:frontend/screens/student_grades_page.dart';
 import 'package:frontend/screens/student_schedule_page.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
@@ -251,6 +252,17 @@ class _StudentHomeState extends State<StudentHome> {
               builder: (context) => const StudentGradesPage(),
             ),
           );
+        } else if (title == "Attendance") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const StudentAttendancePage(),
+            ),
+          );
+        } else if (title == "Courses") {
+          // Navigate to Courses Page (to be implemented)
+        } else if (title == "Messages") {
+          // Navigate to Messages Page (to be implemented)
         }
       },
       child: Container(

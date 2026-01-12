@@ -89,5 +89,28 @@ class StudentController extends Controller
 
     return response()->json($grades);
     }
+
+    public function getAttendance(Request $request) {
+    $user = $request->user();
+
+    // Fetch all attendance records for this student where they were present
+    $records = DB::table('attendances')
+        ->where('student_id', $user->id)
+        ->where('is_present', 1)
+        ->select('course_name', 'week_number')
+        ->get();
+
+    // Group the data by course name to calculate totals and attended weeks
+    $summary = $records->groupBy('course_name')->map(function ($courseRecords, $courseName) {
+        $attendedWeeks = $courseRecords->pluck('week_number')->toArray();
+        return [
+            'course_name' => $courseName,
+            'total_attended' => count($attendedWeeks),
+            'attended_weeks' => $attendedWeeks,
+        ];
+    })->values();
+
+    return response()->json($summary);
+    }
     
 }

@@ -58,4 +58,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Student Grades
     Route::get('/student/grades', [StudentController::class, 'getGrades']);
+    // Student Attendance
+    Route::get('/student/attendance', [StudentController::class, 'getAttendance']);
 });
