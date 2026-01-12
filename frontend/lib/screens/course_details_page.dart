@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../globals.dart' as globals;
+import 'package:url_launcher/url_launcher.dart';
 
 class CourseDetailsPage extends StatefulWidget {
   final String courseName;
@@ -108,7 +109,30 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       const SnackBar(content: Text("Browser error: Please try a Hard Refresh (Ctrl+F5)")),
     );
   }
-}
+  }
+
+
+  Future<void> _downloadFile(String filePath) async {
+  // Construct the full URL to the file in your public storage
+  final String fullUrl = "http://127.0.0.1:8000/storage/$filePath";
+  final Uri uri = Uri.parse(fullUrl);
+
+  try {
+    if (await canLaunchUrl(uri)) {
+      // LaunchMode.externalApplication ensures it opens in a browser/system viewer
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch $fullUrl';
+    }
+  } catch (e) {
+    debugPrint("Error launching URL: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Could not open file: $e")),
+    );
+  }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -149,59 +173,62 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
   String baseUrl = "http://127.0.0.1:8000/storage/";
   
   if (file['file_type'] == 'image') {
-    return Stack(
-      children: [
-        Container(
-          margin: const EdgeInsets.all(15),
-          height: 200,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            image: DecorationImage(
-              image: NetworkImage(baseUrl + file['file_path']), 
-              fit: BoxFit.cover
-            ),
-          ),
-        ),
-        // Delete button for Teacher only
-        if (widget.isTeacher)
-          Positioned(
-            top: 20,
-            right: 20,
-            child: CircleAvatar(
-              backgroundColor: Colors.red.withOpacity(0.8),
-              child: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.white),
-                onPressed: () => deleteFile(file['id']),
-              ),
-            ),
-          ),
-      ],
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(baseUrl + file['file_path'], fit: BoxFit.cover),
+      ),
     );
   } else {
+    // PDF Style - Matching your screenshot
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white, 
-        borderRadius: BorderRadius.circular(10), 
-        border: Border.all(color: Colors.grey.shade200)
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.picture_as_pdf, color: Colors.red),
-          const SizedBox(width: 10),
-          Expanded(child: Text(file['file_name'], overflow: TextOverflow.ellipsis)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.download, color: Colors.blue)),
-          // Delete button for Teacher only
-          if (widget.isTeacher)
-            IconButton(
-              onPressed: () => deleteFile(file['id']), 
-              icon: const Icon(Icons.delete_outline, color: Colors.red)
-            ),
-        ],
-      ),
-    );
+    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(color: Colors.grey.shade100),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 4))
+      ],
+    ),
+    child: Row(
+      children: [
+        // Improved Icon Style
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.red.shade50,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFE53935), size: 28),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            file['file_name'], 
+            style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        // The Functional Download Button
+        IconButton(
+          onPressed: () => _downloadFile(file['file_path']), 
+          icon: const Icon(Icons.download_for_offline_rounded, color: Color(0xFF2196F3), size: 28),
+        ),
+        if (widget.isTeacher)
+          IconButton(
+            onPressed: () => deleteFile(file['id']), 
+            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+          ),
+      ],
+    ),
+  );
   }
 }
 }

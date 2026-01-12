@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/login_page.dart';
 import 'package:frontend/screens/student_attendance_page.dart';
+import 'package:frontend/screens/student_courses_page.dart';
 import 'package:frontend/screens/student_grades_page.dart';
 import 'package:frontend/screens/student_schedule_page.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
@@ -260,7 +261,12 @@ class _StudentHomeState extends State<StudentHome> {
             ),
           );
         } else if (title == "Courses") {
-          // Navigate to Courses Page (to be implemented)
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const StudentCoursesPage(),
+            ),
+          );
         } else if (title == "Messages") {
           // Navigate to Messages Page (to be implemented)
         }

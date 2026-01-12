@@ -112,5 +112,27 @@ class StudentController extends Controller
 
     return response()->json($summary);
     }
+
+
+    public function getAssignedCourses(Request $request) {
+    $user = $request->user();
+
+    // Fetch unique course names assigned to this student from the grades table
+    $courses = DB::table('grades')
+        ->where('student_id', $user->id)
+        ->distinct()
+        ->pluck('course_name');
+
+    return response()->json($courses);
+    }
+
+    // Ensure the general course files route is accessible to students in api.php
+    public function getCourseFiles($course_name) {
+    $files = DB::table('course_files')
+        ->where('course_name', $course_name)
+        ->orderBy('created_at', 'desc')
+        ->get();
+    return response()->json($files);
+    }
     
 }
