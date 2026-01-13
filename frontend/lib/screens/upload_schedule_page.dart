@@ -1,5 +1,6 @@
-// ignore_for_file: unused_import, use_build_context_synchronously, deprecated_member_use, library_private_types_in_public_api, avoid_print
+// ignore_for_file: use_build_context_synchronously, avoid_print
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -8,15 +9,14 @@ import 'dart:io';
 import '../globals.dart' as globals;
 
 class UploadSchedulePage extends StatefulWidget {
-  // Removed 'final List<dynamic> groups' from here to stop the dashboard error
   const UploadSchedulePage({super.key});
 
   @override
-  _UploadSchedulePageState createState() => _UploadSchedulePageState();
+  State<UploadSchedulePage> createState() => _UploadSchedulePageState();
 }
 
 class _UploadSchedulePageState extends State<UploadSchedulePage> {
-  List<dynamic> groups = []; // Page now manages its own group list
+  List<dynamic> groups = [];
   Uint8List? _webImage;
   XFile? _selectedImage;
   int? _selectedGroupId;
@@ -28,18 +28,18 @@ class _UploadSchedulePageState extends State<UploadSchedulePage> {
   @override
   void initState() {
     super.initState();
-    fetchGroups(); // Fetch groups as soon as the page opens
+    fetchGroups();
   }
 
   Map<String, String> get _headers => {
-    'Authorization': 'Bearer ${globals.userToken}',
-    'Accept': 'application/json',
-  };
+        'Authorization': 'Bearer ${globals.userToken}',
+        'Accept': 'application/json',
+      };
 
   Future<void> fetchGroups() async {
     try {
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/admin/groups'),
+        Uri.parse('http://${globals.serverIP}:8000/api/admin/groups'),
         headers: _headers,
       );
       if (response.statusCode == 200) {
@@ -58,134 +58,174 @@ class _UploadSchedulePageState extends State<UploadSchedulePage> {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       if (kIsWeb) {
-        // For Chrome/Web: Read bytes to show the preview
         final bytes = await image.readAsBytes();
         setState(() {
           _webImage = bytes;
           _selectedImage = image;
         });
       } else {
-        // For Mobile
         setState(() => _selectedImage = image);
       }
     }
   }
 
   Future<void> _upload() async {
-  print("Starting upload process...");
-  if (_selectedImage == null || _selectedGroupId == null) {
-    print("Error: Image or Group ID is null");
-    return;
-  }
-
-  setState(() => _isUploading = true);
-
-  try {
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('http://127.0.0.1:8000/api/admin/upload-schedule'),
-    );
-
-    request.headers.addAll({
-      'Authorization': 'Bearer ${globals.userToken}',
-      'Accept': 'application/json',
-    });
-
-    request.fields['group_id'] = _selectedGroupId.toString();
-
-    // WEB FIX: Use fromBytes for Chrome instead of fromPath
-    final bytes = await _selectedImage!.readAsBytes();
-    final multipartFile = http.MultipartFile.fromBytes(
-      'image', 
-      bytes,
-      filename: _selectedImage!.name,
-    );
-    
-    request.files.add(multipartFile);
-
-    print("Sending request to server...");
-    var streamedResponse = await request.send();
-    var response = await http.Response.fromStream(streamedResponse);
-    print("Server Response: ${response.body}");
-
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Uploaded!")));
-      Navigator.pop(context);
-    } else {
-      print("Upload failed with status: ${response.statusCode}");
+    if (_selectedImage == null || _selectedGroupId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select a group and an image")),
+      );
+      return;
     }
-  } catch (e) {
-    print("CRITICAL ERROR during upload: $e");
-  } finally {
-    setState(() => _isUploading = false);
+
+    setState(() => _isUploading = true);
+
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('http://${globals.serverIP}:8000/api/admin/upload-schedule'),
+      );
+
+      request.headers.addAll(_headers);
+      request.fields['group_id'] = _selectedGroupId.toString();
+
+      final bytes = await _selectedImage!.readAsBytes();
+      final multipartFile = http.MultipartFile.fromBytes(
+        'image',
+        bytes,
+        filename: _selectedImage!.name,
+      );
+
+      request.files.add(multipartFile);
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Schedule uploaded successfully!"), backgroundColor: Colors.green),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Upload failed."), backgroundColor: Colors.redAccent),
+        );
+      }
+    } catch (e) {
+      print("Error: $e");
+    } finally {
+      setState(() => _isUploading = false);
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Upload Schedule")),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator()) 
-        : Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                DropdownButtonFormField<int>(
-                  decoration: const InputDecoration(labelText: "Select Group"),
-                  items: groups.map((g) {
-                    return DropdownMenuItem<int>(
-                      value: g['id'], 
-                      child: Text(g['name']),
-                    );
-                  }).toList(),
-                  onChanged: (val) => setState(() => _selectedGroupId = val),
-                ),
-                const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    height: 250,
-                    width: double.infinity,
+      backgroundColor: const Color(0xFFF8F9FD),
+      appBar: AppBar(
+        title: Text(
+          "Upload Schedule",
+          style: GoogleFonts.poppins(color: const Color(0xFF311B92), fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF311B92), size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF673AB7)))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(25),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Target Group", 
+                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black54)),
+                  const SizedBox(height: 10),
+                  // Styled Group Selector
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(15),
-                      color: Colors.grey.shade50,
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
                     ),
-                    child: _selectedImage == null
-                        ? const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.cloud_upload_outlined, size: 50, color: Colors.grey),
-                              Text("Tap to select schedule image", style: TextStyle(color: Colors.grey)),
-                            ],
-                          )
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: kIsWeb 
-                              ? Image.memory(_webImage!, fit: BoxFit.contain) // Web uses bytes
-                              : Image.file(File(_selectedImage!.path), fit: BoxFit.contain), // Mobile uses path
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 30),
-                _isUploading
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: () {
-                          print("Upload button clicked!");
-                          _upload();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF673AB7),
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text("Upload Schedule", style: TextStyle(color: Colors.white)),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButtonFormField<int>(
+                        decoration: const InputDecoration(border: InputBorder.none),
+                        hint: Text("Select Group", style: GoogleFonts.poppins(fontSize: 14)),
+                        value: _selectedGroupId,
+                        items: groups.map((g) {
+                          return DropdownMenuItem<int>(
+                            value: g['id'],
+                            child: Text(g['name'], style: GoogleFonts.poppins(fontSize: 14)),
+                          );
+                        }).toList(),
+                        onChanged: (val) => setState(() => _selectedGroupId = val),
                       ),
-              ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Text("Schedule Image", 
+                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black54)),
+                  const SizedBox(height: 10),
+                  // Upload Area
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: 300,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        // Purple border if image is selected, otherwise light grey
+                        border: Border.all(
+                          color: _selectedImage != null ? const Color(0xFF673AB7) : Colors.grey.shade300,
+                          width: _selectedImage != null ? 3 : 1,
+                        ),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+                      ),
+                      child: _selectedImage == null
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.add_photo_alternate_rounded, size: 60, color: Color(0xFF673AB7)),
+                                const SizedBox(height: 10),
+                                Text("Tap to select image", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 13)),
+                              ],
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: kIsWeb
+                                    ? Image.memory(_webImage!, fit: BoxFit.contain)
+                                    : Image.file(File(_selectedImage!.path), fit: BoxFit.contain),
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  _isUploading
+                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF673AB7)))
+                      : ElevatedButton(
+                          onPressed: _upload,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF673AB7),
+                            minimumSize: const Size(double.infinity, 55),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            "Confirm & Upload",
+                            style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
+                ],
+              ),
             ),
-          ),
     );
   }
 }

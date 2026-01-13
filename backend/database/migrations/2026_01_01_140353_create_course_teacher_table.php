@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('course_teacher', function (Blueprint $table) {
             $table->id();
-            $table->string('course_name'); // DAM, DAW, etc.
-            $table->foreignId('teacher_id')->constrained('users')->onDelete('cascade');
+            $table->string('course_name'); 
+            $table->unsignedBigInteger('teacher_id');
+            $table->string('teacher_name');
             $table->timestamps();
+            $table->foreign('teacher_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

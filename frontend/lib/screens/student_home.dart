@@ -37,7 +37,7 @@ class _StudentHomeState extends State<StudentHome> {
   Future<void> fetchStudentData() async {
     try {
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/student/profile'),
+        Uri.parse('http://${globals.serverIP}:8000/api/student/profile'),
         headers: {
           'Authorization': 'Bearer ${globals.userToken}',
           'Accept': 'application/json',
@@ -89,10 +89,11 @@ class _StudentHomeState extends State<StudentHome> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F3FF),
-      body: SafeArea(
+      body: SafeArea( 
         child: _getPages()[_selectedIndex], // Use the function here
       ),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: SafeArea(
+      child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -123,15 +124,21 @@ class _StudentHomeState extends State<StudentHome> {
           ],
         ),
       ),
+      ),
     );
   }
 
-  Widget _buildHomeTab() {
-    // Use dynamic name from database
-    String studentName = studentProfile?['name'] ?? "Student";
-    String? profilePic = studentProfile?['profile_picture'];
+Widget _buildHomeTab() {
+  String studentName = studentProfile?['name'] ?? "Student";
+  String? profilePic = studentProfile?['profile_picture'];
 
-    return SingleChildScrollView(
+  return RefreshIndicator(
+    onRefresh: fetchStudentData, // This triggers your API call and updates state
+    color: const Color(0xFF673AB7),
+    backgroundColor: Colors.white,
+    child: SingleChildScrollView(
+      // physics ensures the pull-to-refresh works even if the screen isn't full
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(25.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,18 +157,14 @@ class _StudentHomeState extends State<StudentHome> {
                 ),
                 child: CircleAvatar(
                   radius: 22,
-                  // If there's an uploaded pic, show it; otherwise use default
                   backgroundImage: profilePic != null 
-                    ? NetworkImage('http://127.0.0.1:8000/storage/$profilePic') as ImageProvider
+                    ? NetworkImage('http://${globals.serverIP}:8000/storage/$profilePic') as ImageProvider
                     : const AssetImage('assets/user.png'), 
                 ),
               ),
             ],
           ),
           const SizedBox(height: 30),
-          
-          // ... rest of your UI code (Glass Banner, GridView, etc.) ...
-          // Ensure you keep the same _buildMenuCard and UI elements below
           
           Container(
             width: double.infinity,
@@ -185,7 +188,7 @@ class _StudentHomeState extends State<StudentHome> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Welcome back,\n$studentName", // Showing dynamic name
+                  "Welcome back,\n$studentName",
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -203,7 +206,10 @@ class _StudentHomeState extends State<StudentHome> {
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2, crossAxisSpacing: 15, mainAxisSpacing: 15, childAspectRatio: 1.2,
+            crossAxisCount: 2, 
+            crossAxisSpacing: 15, 
+            mainAxisSpacing: 15, 
+            childAspectRatio: 1.2,
             children: [
               _buildMenuCard("Group Schedule", Icons.calendar_today_rounded, Colors.blue),
               _buildMenuCard("Grades", Icons.analytics_outlined, Colors.orange),
@@ -213,12 +219,14 @@ class _StudentHomeState extends State<StudentHome> {
               _buildMenuCard("Logout", Icons.logout_rounded, Colors.blueGrey),
             ],
           ),
+          // Adding a small spacer at the bottom to ensure scroll room
+          const SizedBox(height: 20),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  // Keep your existing _buildMenuCard method here...
   Widget _buildMenuCard(String title, IconData icon, Color color) {
     return InkWell(
       onTap: () {

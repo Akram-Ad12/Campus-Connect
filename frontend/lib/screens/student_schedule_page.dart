@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:frontend/globals.dart' as globals;
 import 'package:url_launcher/url_launcher.dart';
 
 class StudentSchedulePage extends StatelessWidget {
@@ -11,7 +12,7 @@ class StudentSchedulePage extends StatelessWidget {
   Future<void> _downloadSchedule(BuildContext context) async {
     if (schedulePath == null) return;
     
-    final String url = 'http://127.0.0.1:8000/storage/$schedulePath';
+    final String url = 'http://${globals.serverIP}:8000/storage/$schedulePath';
     final Uri uri = Uri.parse(url);
 
     if (await canLaunchUrl(uri)) {
@@ -60,7 +61,7 @@ class StudentSchedulePage extends StatelessWidget {
                       minScale: 0.5,
                       maxScale: 4.0,
                       child: Image.network(
-                        'http://127.0.0.1:8000/storage/$schedulePath',
+                        'http://${globals.serverIP}:8000/storage/$schedulePath',
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
                           return const Center(child: CircularProgressIndicator());

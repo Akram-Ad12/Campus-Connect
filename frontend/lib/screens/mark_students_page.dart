@@ -28,7 +28,7 @@ class _MarkStudentsPageState extends State<MarkStudentsPage> {
   Future<void> fetchStudents() async {
     if (selectedCourse == null || selectedGroup == null) return;
     
-    final url = Uri.parse('http://127.0.0.1:8000/api/teacher/get-students').replace(
+    final url = Uri.parse('http://${globals.serverIP}:8000/api/teacher/get-students').replace(
       queryParameters: {'course_name': selectedCourse, 'group_name': selectedGroup},
     );
 
@@ -60,7 +60,7 @@ class _MarkStudentsPageState extends State<MarkStudentsPage> {
     if (value == null || value < 0 || value > 20) return;
 
     await http.post(
-      Uri.parse('http://127.0.0.1:8000/api/teacher/update-grade'),
+      Uri.parse('http://${globals.serverIP}:8000/api/teacher/update-grade'),
       headers: {
         'Authorization': 'Bearer ${globals.userToken}',
         'Content-Type': 'application/json',

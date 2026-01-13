@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -24,7 +26,7 @@ class _StudentCoursesPageState extends State<StudentCoursesPage> {
   Future<void> _fetchCourses() async {
     try {
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/student/assigned-courses'),
+        Uri.parse('http://${globals.serverIP}:8000/api/student/assigned-courses'),
         headers: {'Authorization': 'Bearer ${globals.userToken}'},
       );
       if (response.statusCode == 200) {

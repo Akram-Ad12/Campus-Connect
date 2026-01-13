@@ -28,7 +28,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
 
   Future<void> fetchFiles() async {
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:8000/api/course/files/${widget.courseName}'),
+      Uri.parse('http://${globals.serverIP}:8000/api/course/files/${widget.courseName}'),
       headers: {'Authorization': 'Bearer ${globals.userToken}'},
     );
     if (response.statusCode == 200) {
@@ -37,7 +37,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
   }
 
   Future<void> deleteFile(int fileId) async {
-  final url = Uri.parse('http://127.0.0.1:8000/api/teacher/delete-file/$fileId');
+  final url = Uri.parse('http://${globals.serverIP}:8000/api/teacher/delete-file/$fileId');
 
   try {
     final response = await http.delete(
@@ -77,7 +77,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       // 2. Prepare the Multipart Request
       var request = http.MultipartRequest(
         'POST', 
-        Uri.parse('http://127.0.0.1:8000/api/teacher/upload-file')
+        Uri.parse('http://${globals.serverIP}:8000/api/teacher/upload-file')
       );
       
       request.headers['Authorization'] = 'Bearer ${globals.userToken}';
@@ -114,7 +114,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
 
   Future<void> _downloadFile(String filePath) async {
   // Construct the full URL to the file in your public storage
-  final String fullUrl = "http://127.0.0.1:8000/storage/$filePath";
+  final String fullUrl = "http://${globals.serverIP}:8000/storage/$filePath";
   final Uri uri = Uri.parse(fullUrl);
 
   try {
@@ -170,7 +170,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
   }
 
   Widget _buildFileContainer(dynamic file) {
-  String baseUrl = "http://127.0.0.1:8000/storage/";
+  String baseUrl = "http://${globals.serverIP}:8000/storage/";
   
   if (file['file_type'] == 'image') {
     return Container(

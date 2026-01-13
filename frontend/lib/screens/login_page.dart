@@ -1,4 +1,5 @@
 // ignore_for_file: unused_import, avoid_print, use_build_context_synchronously
+import 'dart:ui'; // Required for BackdropFilter (Glass effect)
 import 'package:flutter/material.dart';
 import '../globals.dart' as globals;
 import 'package:frontend/screens/register_page.dart';
@@ -20,163 +21,218 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  String? userToken;
 
-  // Logic to connect to your Laravel Backend [cite: 34]
   Future<void> login() async {
-  if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Please fill in all fields")),
-    );
-    return;
-  }
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill in all fields")),
+      );
+      return;
+    }
 
-  setState(() => _isLoading = true);
-  
-  try {
-    // Note: 'localhost' works for Chrome. 
-    // If using a physical phone, use your IP address (e.g., 192.168.1.xx)
-    final response = await http.post(
-      Uri.parse('http://127.0.0.1:8000/api/login'),
-      body: {
-        'email': _emailController.text,
-        'password': _passwordController.text,
-      },
-    );
+    setState(() => _isLoading = true);
+    try {
+      final response = await http.post(
+        Uri.parse('http://${globals.serverIP}:8000/api/login'),
+        body: {
+          'email': _emailController.text,
+          'password': _passwordController.text,
+        },
+      );
 
-    print("Response Status: ${response.statusCode}");
-    print("Response Body: ${response.body}");
+      final data = jsonDecode(response.body);
 
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode == 200) {
-      print("FULL API RESPONSE: $data");
-      globals.userToken = data['token'] ?? data['plainTextToken'] ?? data['access_token'];
-      print("SUCCESS: ${data['user']['role']}");
-      print("Login Success. Token: ${globals.userToken}");
-      String role = data['user']['role'];
-      Widget nextScreen;
-      
-      // Navigate based on actor role [cite: 9, 28]
-      if (role == 'admin') {
-        nextScreen = const AdminHome();
-      } else if (role == 'student') {
-        nextScreen = StudentHome();
-      } else if (role == 'teacher') {
-         nextScreen = TeacherHome();
+      if (response.statusCode == 200) {
+        globals.userToken = data['token'] ?? data['plainTextToken'] ?? data['access_token'];
+        String role = data['user']['role'];
+        Widget nextScreen;
+        
+        if (role == 'admin') {
+          nextScreen = const AdminHome();
+        } else if (role == 'student') {
+          nextScreen = const StudentHome();
+        } else if (role == 'teacher') {
+          nextScreen = const TeacherHome();
+        } else {
+          nextScreen = const LoginPage();
+        }
+        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => nextScreen),
+        );
       } else {
-        nextScreen = const AdminHome();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: ${data['message']}"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
       }
-      Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => nextScreen),
-    );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Could not connect to server.")),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
-     else {
-      // Show error message from Laravel (e.g., "Invalid Credentials" or "Pending Validation") [cite: 13]
-      print("LARAVEL ERROR: ${response.body}"); 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Error: ${data['message']}"),
-        backgroundColor: Colors.redAccent,
-      ),
-    );
-    }
-    
-  } catch (e) {
-    // If this runs, Flutter can't talk to Laravel at all
-    print("Connection Error: $e");
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Could not connect to server. Is Laravel running?")),
-    );
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color(0xFFF5F5F7), // Light Gray background
-    body: Center(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Requirement 2: Logo Placeholder
-              Image.asset(
-                'assets/campus_connect_logo.png',
-                height: 250,
-                errorBuilder: (context, error, stackTrace) => 
-                  const Icon(Icons.school, size: 100, color: Color(0xFF673AB7)),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFF5F3FF), Color(0xFFEDE9FE), Color(0xFFDDD6FE)],
               ),
-              const SizedBox(height: 40),
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                color: Colors.white,
+            ),
+          ),
+          
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.all(25),
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
                   child: Column(
                     children: [
-                      TextField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: "University Email",
-                          prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF673AB7)),
-                          border: OutlineInputBorder(),
+                      Image.asset(
+                        'assets/campus_connect_logo.png',
+                        height: 180,
+                        errorBuilder: (context, error, stackTrace) => 
+                          const Icon(Icons.school, size: 80, color: Color(0xFF673AB7)),
+                      ),
+                      const SizedBox(height: 10),
+                      
+                      Text(
+                        "Sign In",
+                        style: GoogleFonts.poppins(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF311B92),
+                          letterSpacing: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: "Password",
-                          prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF673AB7)),
-                          border: OutlineInputBorder(),
+                      Text(
+                        "Welcome to Campus Connect",
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.black45,
                         ),
                       ),
                       const SizedBox(height: 30),
-                      _isLoading 
-                        ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                            onPressed: login,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF673AB7),
-                              minimumSize: const Size(double.infinity, 55),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(30),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(color: Colors.white.withOpacity(0.5)),
                             ),
-                            child: const Text("Sign In", style: TextStyle(color: Colors.white, fontSize: 18)),
+                            child: Column(
+                              children: [
+                                _buildTextField(
+                                  controller: _emailController,
+                                  label: "University Email",
+                                  icon: Icons.email_outlined,
+                                ),
+                                const SizedBox(height: 20),
+                                _buildTextField(
+                                  controller: _passwordController,
+                                  label: "Password",
+                                  icon: Icons.lock_outline,
+                                  isPassword: true,
+                                ),
+                                const SizedBox(height: 30),
+                                
+                                _isLoading 
+                                  ? const CircularProgressIndicator(color: Color(0xFF673AB7))
+                                  : Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(15),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF673AB7).withOpacity(0.3),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 5),
+                                          )
+                                        ],
+                                      ),
+                                      child: ElevatedButton(
+                                        onPressed: login,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF673AB7),
+                                          foregroundColor: Colors.white,
+                                          minimumSize: const Size(double.infinity, 55),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                          elevation: 0,
+                                        ),
+                                        child: const Text("Continue", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ),
+                              ],
+                            ),
                           ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 25),
-              // Requirement 3: Sign Up Link
-              GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterPage())),
-                child: RichText(
-                  text: const TextSpan(
-                    text: "Don't have a Campus Connect account? ",
-                    style: TextStyle(color: Colors.black54),
-                    children: [
-                      TextSpan(
-                        text: "Sign Up.",
-                        style: TextStyle(color: Color(0xFF673AB7), fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 30),
+                      
+                      GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterPage())),
+                        child: RichText(
+                          text: TextSpan(
+                            text: "Don't have an account? ",
+                            style: GoogleFonts.poppins(color: Colors.black54, fontSize: 13),
+                            children: const [
+                              TextSpan(
+                                text: "Sign Up",
+                                style: TextStyle(color: Color(0xFF673AB7), fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool isPassword = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.black45, fontSize: 14),
+        prefixIcon: Icon(icon, color: const Color(0xFF673AB7), size: 20),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.5),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+      ),
+    );
+  }
 }

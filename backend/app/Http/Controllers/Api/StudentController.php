@@ -34,8 +34,7 @@ class StudentController extends Controller
     
     $profile = DB::table('users')
         ->leftJoin('student_information', 'users.id', '=', 'student_information.user_id')
-        // CHANGED: Use group_id to join with groups.name
-        ->leftJoin('groups', 'users.group_id', '=', 'groups.name') 
+        ->leftJoin('groups', 'users.group_id', '=', 'groups.name')
         ->where('users.id', $user->id)
         ->select(
             'users.name', 
@@ -45,6 +44,7 @@ class StudentController extends Controller
             'student_information.dob', 
             'student_information.pob', 
             'student_information.profile_picture',
+            'groups.name as group_name',
             'groups.schedule_image'
         )
         ->first();

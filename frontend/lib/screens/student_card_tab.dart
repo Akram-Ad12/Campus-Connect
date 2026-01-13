@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+import 'package:frontend/globals.dart' as globals;
+
 class StudentCardTab extends StatefulWidget {
   final Map<String, dynamic>? userData;
   const StudentCardTab({super.key, this.userData});
@@ -98,7 +100,7 @@ class _StudentCardTabState extends State<StudentCardTab> {
                     child: CircleAvatar(
                       radius: 60,
                       backgroundImage: profilePic != null
-                      ? NetworkImage('http://127.0.0.1:8000/storage/$profilePic')
+                      ? NetworkImage('http://${globals.serverIP}:8000/storage/$profilePic')
                       : const AssetImage('user.png') as ImageProvider,
                     ),
                   ),

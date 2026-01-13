@@ -33,7 +33,7 @@ class _StudentGradesPageState extends State<StudentGradesPage> {
   Future<void> _fetchGrades() async {
     try {
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/student/grades'),
+        Uri.parse('http://${globals.serverIP}:8000/api/student/grades'),
         headers: {
           'Authorization': 'Bearer ${globals.userToken}',
           'Accept': 'application/json',

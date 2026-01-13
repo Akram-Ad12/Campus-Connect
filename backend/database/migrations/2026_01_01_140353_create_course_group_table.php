@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('course_group', function (Blueprint $table) {
             $table->id();
             $table->string('course_name');
-            $table->foreignId('group_id')->constrained('groups')->onDelete('cascade');
+            $table->unsignedBigInteger('group_id');
+            $table->string('group_name'); // Column to see the name in DB
             $table->timestamps();
+            $table->foreign('group_id')->references('id')->on('groups')->onDelete('cascade');
         });
     }
 

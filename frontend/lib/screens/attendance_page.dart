@@ -36,7 +36,7 @@ class _AttendancePageState extends State<AttendancePage> {
 
     setState(() => isLoading = true);
     
-    final url = Uri.parse('http://127.0.0.1:8000/api/teacher/get-attendance').replace(
+    final url = Uri.parse('http://${globals.serverIP}:8000/api/teacher/get-attendance').replace(
       queryParameters: {
         'course_name': selectedCourse,
         'group_name': selectedGroup,
@@ -72,7 +72,7 @@ class _AttendancePageState extends State<AttendancePage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/teacher/toggle-attendance'),
+        Uri.parse('http://${globals.serverIP}:8000/api/teacher/toggle-attendance'),
         headers: {
           'Authorization': 'Bearer ${globals.userToken}',
           'Content-Type': 'application/json',

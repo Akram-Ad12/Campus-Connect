@@ -20,7 +20,7 @@ class _StudentProfileTabState extends State<StudentProfileTab> {
   Future<void> _updateProfile(String field, String value) async {
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/student/update-profile'),
+        Uri.parse('http://${globals.serverIP}:8000/api/student/update-profile'),
         headers: {
           'Authorization': 'Bearer ${globals.userToken}',
           'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ class _StudentProfileTabState extends State<StudentProfileTab> {
     if (image != null) {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://127.0.0.1:8000/api/student/upload-avatar'),
+        Uri.parse('http://${globals.serverIP}:8000/api/student/upload-avatar'),
       );
       request.headers['Authorization'] = 'Bearer ${globals.userToken}';
       request.files.add(await http.MultipartFile.fromPath('avatar', image.path));
@@ -92,7 +92,7 @@ class _StudentProfileTabState extends State<StudentProfileTab> {
                         radius: 45,
                         backgroundColor: Colors.grey[200],
                         backgroundImage: profilePic != null
-                            ? NetworkImage('http://127.0.0.1:8000/storage/$profilePic')
+                            ? NetworkImage('http://${globals.serverIP}:8000/storage/$profilePic')
                             : const AssetImage('assets/user.png') as ImageProvider,
                       ),
                     ),

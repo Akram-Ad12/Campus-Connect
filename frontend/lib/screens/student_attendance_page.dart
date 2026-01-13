@@ -24,7 +24,7 @@ class _StudentAttendancePageState extends State<StudentAttendancePage> {
   Future<void> _fetchAttendance() async {
     try {
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/student/attendance'),
+        Uri.parse('http://${globals.serverIP}:8000/api/student/attendance'),
         headers: {
           'Authorization': 'Bearer ${globals.userToken}',
           'Accept': 'application/json',

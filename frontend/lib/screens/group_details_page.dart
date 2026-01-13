@@ -25,7 +25,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
   }
 
   Future<void> fetchDetails() async {
-    final url = Uri.parse('http://127.0.0.1:8000/api/teacher/group-details').replace(
+    final url = Uri.parse('http://${globals.serverIP}:8000/api/teacher/group-details').replace(
       queryParameters: {
         'group_name': widget.groupName,
         'course_name': widget.courseName,
