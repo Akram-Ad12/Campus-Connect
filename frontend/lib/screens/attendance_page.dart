@@ -1,5 +1,6 @@
-// ignore_for_file: unused_import, use_build_context_synchronously, deprecated_member_use
+// ignore_for_file: avoid_print, use_build_context_synchronously, library_private_types_in_public_api, deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../globals.dart' as globals;
@@ -22,20 +23,18 @@ class _AttendancePageState extends State<AttendancePage> {
   bool isLoading = false;
 
   final List<int> weeks = List.generate(16, (index) => index + 1);
-  List<dynamic> getFilteredGroups() {
-  if (selectedCourse == null) return [];
-  return widget.groups.where((group) {
-    // Ensure we are comparing the course_name inside the map to the selected string
-    return group['course_name'].toString() == selectedCourse;
-  }).toList();
-}
 
-  // Fetch the student list for the specific Week/Group/Course combo
+  List<dynamic> getFilteredGroups() {
+    if (selectedCourse == null) return [];
+    return widget.groups.where((group) {
+      return group['course_name'].toString() == selectedCourse;
+    }).toList();
+  }
+
   Future<void> fetchAttendanceList() async {
     if (selectedCourse == null || selectedGroup == null || selectedWeek == null) return;
 
     setState(() => isLoading = true);
-    
     final url = Uri.parse('http://${globals.serverIP}:8000/api/teacher/get-attendance').replace(
       queryParameters: {
         'course_name': selectedCourse,
@@ -45,13 +44,10 @@ class _AttendancePageState extends State<AttendancePage> {
     );
 
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer ${globals.userToken}',
-          'Accept': 'application/json',
-        },
-      );
+      final response = await http.get(url, headers: {
+        'Authorization': 'Bearer ${globals.userToken}',
+        'Accept': 'application/json',
+      });
 
       if (response.statusCode == 200) {
         setState(() => students = jsonDecode(response.body));
@@ -63,12 +59,8 @@ class _AttendancePageState extends State<AttendancePage> {
     }
   }
 
-  // Toggle logic - Updates database in real-time
   Future<void> _onToggle(int studentId, bool newValue, int index) async {
-    // Update local UI immediately for responsiveness
-    setState(() {
-      students[index]['is_present'] = newValue;
-    });
+    setState(() => students[index]['is_present'] = newValue);
 
     try {
       final response = await http.post(
@@ -87,135 +79,149 @@ class _AttendancePageState extends State<AttendancePage> {
       );
 
       if (response.statusCode != 200) {
-        // Rollback UI if the backend request fails
-        setState(() {
-          students[index]['is_present'] = !newValue;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to update attendance")),
-        );
+        setState(() => students[index]['is_present'] = !newValue);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to update attendance")));
       }
     } catch (e) {
-      print("Error toggling attendance: $e");
+      print("Error toggling: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FD),
       appBar: AppBar(
-        title: const Text("Mark Attendance"),
-        backgroundColor: const Color(0xFF673AB7),
-        foregroundColor: Colors.white,
+        title: Text("Mark Attendance", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 18)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        foregroundColor: const Color(0xFF1A1A1A),
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-            ),
-            child: Column(
+          _buildSelectionStep("1. Select Course", widget.courses.map((e) => e.toString()).toList(), selectedCourse, (val) {
+            setState(() {
+              selectedCourse = val;
+              selectedGroup = null;
+              selectedWeek = null;
+              students = [];
+            });
+          }),
+          _buildSelectionStep("2. Select Group", getFilteredGroups().map((e) => e['group_name'].toString()).toList(), selectedGroup, (val) {
+            setState(() {
+              selectedGroup = val;
+              selectedWeek = null;
+              students = [];
+            });
+          }, isEnabled: selectedCourse != null),
+          _buildSelectionStep("3. Select Week", weeks.map((e) => "W $e").toList(), selectedWeek != null ? "W $selectedWeek" : null, (val) {
+            setState(() => selectedWeek = int.parse(val.replaceAll("W ", "")));
+            fetchAttendanceList();
+          }, isEnabled: selectedGroup != null),
+          
+          const SizedBox(height: 25),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // 1. Course Selection
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(labelText: "Course", prefixIcon: Icon(Icons.book)),
-                  hint: const Text("Select Course"),
-                  value: selectedCourse,
-                  items: widget.courses.map((c) => DropdownMenuItem(value: c.toString(), child: Text(c.toString()))).toList(),
-                  onChanged: (v) {
-                    setState(() {
-                      selectedCourse = v;
-                      selectedGroup = null; // Reset children
-                      selectedWeek = null;
-                      students = [];
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
-
-                // 2. Group Selection (Disabled if no Course)
-DropdownButtonFormField<String>(
-  decoration: InputDecoration(
-    labelText: "Group", 
-    prefixIcon: const Icon(Icons.group),
-    enabled: selectedCourse != null,
-  ),
-  value: selectedGroup,
-  items: selectedCourse == null 
-      ? null 
-      : getFilteredGroups().map((g) {
-          // CHANGE THIS: Extract only the group_name string for the value
-          String nameOnly = g['group_name'].toString(); 
-          return DropdownMenuItem<String>(
-            value: nameOnly, // This ensures 'selectedGroup' stays a String
-            child: Text(nameOnly),
-          );
-        }).toList(),
-  onChanged: (v) {
-    setState(() {
-      selectedGroup = v; // Still a String, so your API calls remain correct
-      selectedWeek = null;
-      students = [];
-    });
-  },
-),
-                const SizedBox(height: 10),
-
-                // 3. Week Selection (Disabled if no Group)
-                DropdownButtonFormField<int>(
-                  decoration: InputDecoration(
-                    labelText: "Week", 
-                    prefixIcon: const Icon(Icons.calendar_month),
-                    enabled: selectedGroup != null,
-                  ),
-                  hint: Text("Select Week", style: TextStyle(color: selectedGroup == null ? Colors.grey : Colors.black)),
-                  value: selectedWeek,
-                  items: selectedGroup == null 
-                      ? null 
-                      : weeks.map((w) => DropdownMenuItem(value: w, child: Text("Week $w"))).toList(),
-                  onChanged: (v) {
-                    setState(() {
-                      selectedWeek = v;
-                    });
-                    fetchAttendanceList();
-                  },
-                ),
+                Text("Students List", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1A1A1A))),
+                if (students.isNotEmpty)
+                  Text("${students.where((s) => s['is_present'] == true).length}/${students.length} Present", 
+                    style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF673AB7), fontWeight: FontWeight.w600)),
               ],
             ),
           ),
-
-          // Student List Display
+          
           Expanded(
-            child: isLoading 
-              ? const Center(child: CircularProgressIndicator())
-              : students.isEmpty && selectedWeek != null
-                ? const Center(child: Text("No students found in this group"))
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    itemCount: students.length,
-                    itemBuilder: (context, index) {
-                      final student = students[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        child: CheckboxListTile(
-                          title: Text(
-                            student['name'],
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                          subtitle: Text("Student ID: ${student['id']}"),
-                          value: student['is_present'] == true,
-                          activeColor: const Color(0xFF673AB7),
-                          onChanged: (bool? val) {
-                            if (val != null) {
-                              _onToggle(student['id'], val, index);
-                            }
-                          },
-                        ),
-                      );
-                    },
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF673AB7)))
+                : students.isEmpty
+                    ? Center(child: Text("Configure Course & Week to load students", style: GoogleFonts.poppins(color: Colors.black38, fontSize: 13)))
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(top: 10, bottom: 30),
+                        itemCount: students.length,
+                        itemBuilder: (context, index) {
+                          final student = students[index];
+                          bool isPresent = student['is_present'] == true;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: isPresent ? const Color(0xFFF3E5F5).withOpacity(0.5) : Colors.white,
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: isPresent ? const Color(0xFF673AB7).withOpacity(0.2) : Colors.black.withOpacity(0.05),
+                              ),
+                            ),
+                            child: CheckboxListTile(
+                              value: isPresent,
+                              activeColor: const Color(0xFF673AB7),
+                              checkColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                              onChanged: (val) => _onToggle(student['id'], val ?? false, index),
+                              title: Text(student['name'], style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14, color: isPresent ? const Color(0xFF673AB7) : Colors.black87)),
+                              subtitle: Text("Student ID: ${student['id']}", style: GoogleFonts.poppins(fontSize: 11, color: Colors.black45)),
+                              secondary: CircleAvatar(
+                                backgroundColor: isPresent ? const Color(0xFF673AB7) : const Color(0xFFF0F0F0),
+                                radius: 18,
+                                child: Text(student['name'][0], style: TextStyle(color: isPresent ? Colors.white : Colors.black45, fontSize: 14, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectionStep(String title, List<String> items, String? currentSelection, Function(String) onSelect, {bool isEnabled = true}) {
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.4,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 25, top: 15, bottom: 8),
+            child: Text(title, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45, letterSpacing: 0.5)),
+          ),
+          SizedBox(
+            height: 40,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                bool isSelected = currentSelection == items[index];
+                return GestureDetector(
+                  onTap: isEnabled ? () => onSelect(items[index]) : null,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFF673AB7) : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: isSelected ? Colors.transparent : Colors.black.withOpacity(0.08)),
+                    ),
+                    child: Text(
+                      items[index],
+                      style: GoogleFonts.poppins(
+                        color: isSelected ? Colors.white : Colors.black54,
+                        fontSize: 12,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      ),
+                    ),
                   ),
+                );
+              },
+            ),
           ),
         ],
       ),

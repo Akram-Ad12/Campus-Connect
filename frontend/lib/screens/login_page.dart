@@ -1,4 +1,4 @@
-// ignore_for_file: unused_import, avoid_print, use_build_context_synchronously
+// ignore_for_file: unused_import, avoid_print, use_build_context_synchronously, deprecated_member_use
 import 'dart:ui'; // Required for BackdropFilter (Glass effect)
 import 'package:flutter/material.dart';
 import '../globals.dart' as globals;

@@ -1,4 +1,6 @@
 // lib/screens/pending_registrations.dart
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:frontend/globals.dart' as globals;
 import 'package:google_fonts/google_fonts.dart';
