@@ -1,5 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api, deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../globals.dart' as globals;
@@ -41,7 +42,6 @@ class _StudentAttendancePageState extends State<StudentAttendancePage> {
     }
   }
 
-  // Build the 8x2 grid of cubes
   Widget _buildWeekGrid(List<dynamic> attendedWeeks) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -65,8 +65,8 @@ class _StudentAttendancePageState extends State<StudentAttendancePage> {
           height: 12,
           margin: const EdgeInsets.only(right: 3),
           decoration: BoxDecoration(
-            color: present ? const Color(0xFF673AB7) : Colors.grey.shade300,
-            borderRadius: BorderRadius.circular(2),
+            color: present ? const Color(0xFF673AB7) : Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(3), // Slightly more rounded for premium look
           ),
         );
       }),
@@ -76,51 +76,113 @@ class _StudentAttendancePageState extends State<StudentAttendancePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF8F7FF),
       appBar: AppBar(
-        title: const Text("Attendance", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: const Color(0xFF673AB7),
+        title: Text("Attendance Records", 
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF2D3142), fontSize: 18)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF2D3142)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF673AB7)))
           : Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  child: DataTable(
-                    horizontalMargin: 15,
-                    columnSpacing: 20,
-                    headingRowColor: MaterialStateProperty.all(const Color(0xFFF3E5F5)),
-                    columns: const [
-                      DataColumn(label: Text('Course', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('Count', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('Weeks', style: TextStyle(fontWeight: FontWeight.bold))),
-                    ],
-                    rows: _attendanceData.map((data) {
-                      return DataRow(cells: [
-                        DataCell(Text(data['course_name'] ?? 'N/A', style: const TextStyle(fontSize: 13))),
-                        DataCell(Text("${data['total_attended']}/16")),
-                        DataCell(
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: _buildWeekGrid(data['attended_weeks']),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0, bottom: 12.0),
+                    child: Text("Semester Overview", 
+                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black38, letterSpacing: 0.5)),
+                  ),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 8)),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            children: [
+                              Container(
+                                color: const Color(0xFFFBFBFF),
+                                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                                child: Table(
+                                  columnWidths: const {
+                                    0: FlexColumnWidth(2.5),
+                                    1: FlexColumnWidth(1.2),
+                                    2: FlexColumnWidth(2.3),
+                                  },
+                                  children: [
+                                    TableRow(
+                                      children: [
+                                        _headerText('COURSE'),
+                                        _headerText('COUNT'),
+                                        _headerText('WEEKS'),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Divider(height: 1, color: Color(0xFFF1F1F1)),
+                              // Body Section
+                              ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _attendanceData.length,
+                                separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF1F1F1)),
+                                itemBuilder: (context, index) {
+                                  final data = _attendanceData[index];
+
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                                    child: Table(
+                                      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                                      columnWidths: const {
+                                        0: FlexColumnWidth(2.5),
+                                        1: FlexColumnWidth(1.2),
+                                        2: FlexColumnWidth(2.3),
+                                      },
+                                      children: [
+                                        TableRow(
+                                          children: [
+                                            Text(data['course_name'] ?? 'N/A', 
+                                              style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF455A64)),
+                                              overflow: TextOverflow.ellipsis),
+                                            Text("${data['total_attended']}/16", 
+                                              style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF2D3142))),
+                                            _buildWeekGrid(data['attended_weeks']),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
                         ),
-                      ]);
-                    }).toList(),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
     );
+  }
+
+  Widget _headerText(String text) {
+    return Text(text, 
+      style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF673AB7), letterSpacing: 1));
   }
 }

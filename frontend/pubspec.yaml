@@ -67,6 +67,9 @@ flutter:
   assets:
     - assets/campus_connect_logo.png
     - assets/user.png
+    - assets/campus_connect_logo2.png
+    - assets/campus_connect_logo3.png
+    - assets/qr-code.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

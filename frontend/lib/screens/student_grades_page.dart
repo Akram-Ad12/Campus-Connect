@@ -1,6 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api, deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../globals.dart' as globals;
@@ -22,7 +23,6 @@ class _StudentGradesPageState extends State<StudentGradesPage> {
     _fetchGrades();
   }
 
-  // Formula: (CC * 0.3) + (Control * 0.7)
   double? _calculateRawAvg(dynamic cc, dynamic control) {
     if (cc == null || control == null) return null;
     double ccVal = double.tryParse(cc.toString()) ?? 0;
@@ -53,79 +53,154 @@ class _StudentGradesPageState extends State<StudentGradesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7), 
+      backgroundColor: const Color(0xFFF8F7FF),
       appBar: AppBar(
-        title: const Text("My Grades", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: const Color(0xFF673AB7),
+        title: Text("Academic Grades", 
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF2D3142), fontSize: 18)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF2D3142)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF673AB7)))
           : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
-              child: Container(
-                width: double.infinity, // Ensures container takes full width
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  child: Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.grey.shade200),
-                    child: DataTable(
-                      columnSpacing: 15, // Reduced spacing to fit 4 columns better
-                      headingRowHeight: 56,
-                      dataRowHeight: 60,
-                      headingRowColor: MaterialStateProperty.all(const Color(0xFFF3E5F5)),
-                      columns: const [
-                        DataColumn(label: Text('Course', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('CC', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Ctrl', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('AVG', style: TextStyle(fontWeight: FontWeight.bold))),
-                      ],
-                      rows: _grades.map((grade) {
-                        double? rawAvg = _calculateRawAvg(grade['cc'], grade['control']);
-                        bool isPassed = (rawAvg ?? 0) >= 10;
-                        
-                        return DataRow(cells: [
-                          DataCell(Text(grade['course_name'] ?? 'N/A', style: const TextStyle(fontSize: 13))),
-                          DataCell(Text(grade['cc']?.toString() ?? '--')),
-                          DataCell(Text(grade['control']?.toString() ?? '--')),
-                          DataCell(
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: rawAvg == null 
-                                    ? Colors.grey.shade100 
-                                    : (isPassed ? Colors.green.shade50 : Colors.red.shade50),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: rawAvg == null 
-                                      ? Colors.grey.shade300 
-                                      : (isPassed ? Colors.green.shade200 : Colors.red.shade200)
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0, bottom: 12.0),
+                    child: Text("Semester Overview", 
+                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black38, letterSpacing: 0.5)),
+                  ),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 8)),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            children: [
+                              // Header Section
+                              Container(
+                                color: const Color(0xFFFBFBFF),
+                                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                                child: Table(
+                                  columnWidths: const {
+                                    0: FlexColumnWidth(3), // Course name gets more space
+                                    1: FlexColumnWidth(1),
+                                    2: FlexColumnWidth(1),
+                                    3: FlexColumnWidth(1.5), // Avg badge needs a bit more
+                                  },
+                                  children: [
+                                    TableRow(
+                                      children: [
+                                        _headerText('COURSE'),
+                                        _headerText('CC'),
+                                        _headerText('CTRL'),
+                                        Center(child: _headerText('AVG')),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                              child: Text(
-                                rawAvg?.toStringAsFixed(2) ?? '--',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: rawAvg == null 
-                                      ? Colors.grey 
-                                      : (isPassed ? Colors.green.shade700 : Colors.red.shade700)
-                                ),
+                              const Divider(height: 1, color: Color(0xFFF1F1F1)),
+                              // Body Section
+                              ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _grades.length,
+                                separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF1F1F1)),
+                                itemBuilder: (context, index) {
+                                  final grade = _grades[index];
+                                  double? rawAvg = _calculateRawAvg(grade['cc'], grade['control']);
+                                  bool isPassed = (rawAvg ?? 0) >= 10;
+
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                                    child: Table(
+                                      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                                      columnWidths: const {
+                                        0: FlexColumnWidth(3),
+                                        1: FlexColumnWidth(1),
+                                        2: FlexColumnWidth(1),
+                                        3: FlexColumnWidth(1.5),
+                                      },
+                                      children: [
+                                        TableRow(
+                                          children: [
+                                            Text(grade['course_name'] ?? 'N/A', 
+                                              style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF455A64)),
+                                              overflow: TextOverflow.ellipsis),
+                                            _cellText(grade['cc']?.toString() ?? '--'),
+                                            _cellText(grade['control']?.toString() ?? '--'),
+                                            Align(
+                                              alignment: Alignment.centerRight,
+                                              child: _buildAverageBadge(rawAvg, isPassed),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
                               ),
-                            ),
+                            ],
                           ),
-                        ]);
-                      }).toList(),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
+    );
+  }
+
+  Widget _headerText(String text) {
+    return Text(text, 
+      style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF673AB7), letterSpacing: 1));
+  }
+
+  Widget _cellText(String text) {
+    return Text(text, 
+      style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF2D3142)));
+  }
+
+  Widget _buildAverageBadge(double? rawAvg, bool isPassed) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: rawAvg == null 
+            ? Colors.grey.shade50 
+            : (isPassed ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE)),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: rawAvg == null 
+              ? Colors.grey.shade200 
+              : (isPassed ? Colors.green.shade100 : Colors.red.shade100)
+        ),
+      ),
+      child: Text(
+        rawAvg?.toStringAsFixed(2) ?? '--',
+        style: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: rawAvg == null 
+              ? Colors.grey 
+              : (isPassed ? Colors.green.shade700 : Colors.red.shade700)
+        ),
+      ),
     );
   }
 }
